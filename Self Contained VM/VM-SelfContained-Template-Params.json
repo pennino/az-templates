@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "westeurope"
+        },
+        "adminUsername": {
+            "value": "azmin"
+        },		
+        "virtualMachines_name": {
+            "value": "poc-dsc"
+        },
+        "virtualNetworkRG": {
+            "value": "poc-ag-network"
+        },		
+        "virtualNetworkName": {
+            "value": "vnet-1"
+        },
+        "subnetName": {
+            "value": "application-it"
+        },		
+        "DataDisk1_Size": {
+            "value": 512      
+        },		
+        "virtualMachineSize": {
+            "value": "Standard_A0"
+        },
+        "OSImage": {
+            "value": "2012-R2-Datacenter"
+        },		
+        "AvailabilitySet": {
+            "value": "poc-dsc-as"
+        }
+    }
+}
