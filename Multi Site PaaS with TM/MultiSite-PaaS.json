@@ -32,7 +32,11 @@
       },
       "repoURL": {
           "type": "string",
-          "defaultValue": ""
+          "defaultValue": "https://github.com/pennino/az-paas-sampleapp.git"
+      },
+      "branch": {
+          "type": "string",
+          "defaultValue": "master"
       }
   },
   "variables": {
