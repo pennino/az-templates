@@ -4,11 +4,11 @@
     "parameters": {
         "vmPrefix": {
             "type": "string",
-            "defaultValue": "vmsql"
+            "defaultValue": "sqlvm"
         },
         "vmCount": {
             "type": "int",
-            "defaultValue": 1
+            "defaultValue": 2
         },
         "virtualMachineSize": {
             "type": "string",
@@ -23,7 +23,7 @@
         },
         "availabilitySetName": {
             "type": "string",
-            "defaultValue": "sqlvm-av"
+            "defaultValue": "sqlvm-as"
         },
         "availabilitySetPlatformFaultDomainCount": {
             "type": "int",
@@ -206,7 +206,7 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "prepareSqlVmDeployment",
+            "name":  "[concat(parameters('vmPrefix'),'-',copyIndex(),'-dep')]",
             "copy": {
                 "name": "deployCopy",
                 "count": "[parameters('vmCount')]"
