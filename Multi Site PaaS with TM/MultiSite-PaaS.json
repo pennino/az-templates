@@ -1,0 +1,64 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "webAppNamePrefix": {
+          "type": "string",
+          "minLength": 1,
+          "defaultValue": "myWebApp"
+      },
+      "farmSKU": {
+          "type": "string",
+          "allowedValues": [
+              "Free",
+              "Shared",
+              "Basic",
+              "Standard"
+          ],
+          "defaultValue": "Standard"
+      },
+      "farmWorkerSize": {
+          "type": "string",
+          "allowedValues": [
+              "0",
+              "1",
+              "2"
+          ],
+          "defaultValue": "0"
+      },
+      "webAppLocations": {
+          "type": "array",
+          "defaultValue": ["westeurope", "northeurope", "westus", "eastasia"]
+      }
+  },
+  "variables": {
+
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[parameters('webAppLocations')[copyIndex()]]",
+      "apiVersion": "2014-06-01",
+      "copy": {
+          "count": "[length(parameters('webAppLocations'))]",
+          "name": "farmCopy"
+      },
+      "dependsOn": [
+          
+      ],
+      "tags": {
+          "displayName": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]"
+      },
+      "properties": {
+          "name": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]",
+          "sku": "[parameters('farmSKU')]",
+          "workerSize": "[parameters('farmWorkerSize')]",
+          "numberOfWorkers": 1
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
