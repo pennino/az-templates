@@ -58,7 +58,7 @@
         },
         "DscModuleUrl": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/dsc-extension-iis-server-windows-vm/ContosoWebsite.ps1.zip"
+            "defaultValue": "https://github.com/pennino/az-templates/blob/master/Sample%20IaaS%20Application/ContosoWebsite.ps1.zip?raw=true"
         },
         "DscModuleFunction": {
             "type": "string",
@@ -162,7 +162,7 @@
             "properties": {
                 "type": "DSC",
                 "publisher": "Microsoft.Powershell",
-                "typeHandlerVersion": "2.19",
+                "typeHandlerVersion": "2.19 ",
                 "autoUpgradeMinorVersion": "true",
                 "settings": {
                     "modulesUrl": "[parameters('DscModuleUrl')]",
