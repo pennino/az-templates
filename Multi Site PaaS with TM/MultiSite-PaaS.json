@@ -29,6 +29,10 @@
       "webAppLocations": {
           "type": "array",
           "defaultValue": ["westeurope", "northeurope", "westus", "eastasia"]
+      },
+      "repoURL": {
+          "type": "string",
+          "defaultValue": ""
       }
   },
   "variables": {
@@ -75,7 +79,22 @@
         "properties": {
             "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
             "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', concat(parameters('webAppNamePrefix'),'-farm-',copyIndex()))]"
-        }
+        },
+        "resources": [
+            {
+                "name": "web",
+                "type": "sourcecontrols",
+                "apiVersion": "2015-08-01",
+                "dependsOn": [
+                    "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]"
+                ],
+                "properties": {
+                    "repoUrl": "[parameters('repoUrl')]",
+                    "branch": "[parameters('branch')]",
+                    "isManualIntegration": true
+                }
+            }
+        ]
     },
     {
         "name": "[concat(parameters('webAppNamePrefix'),'-tm')]",
