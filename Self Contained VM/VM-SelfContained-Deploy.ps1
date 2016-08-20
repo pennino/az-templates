@@ -24,6 +24,7 @@ If ($psISE){
 }
 
 $templateFilePath = join-path $root "VM-SelfContained-Template.json"
+$templateFilePath = join-path $root "VM-SelfContained-DSC.json"
 $parametersFilePath = join-path $root "VM-SelfContained-Template-Params.json"
 
 try {

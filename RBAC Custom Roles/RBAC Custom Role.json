@@ -1,0 +1,18 @@
+{
+    "Name": <NAME>,
+    "Id": <ID>,
+    "IsCustom": true,
+    "Description": <DESCRIPTION>,
+    "Actions": [
+        <ACTION1>,
+        <ACTION2>
+    ],
+    "NotActions": [
+        <NOTACTION1>,
+        <NOTACTION2>
+    ],
+    "AssignableScopes": [
+        <SCOPE1>,
+        <SCOPE2>
+    ]
+}

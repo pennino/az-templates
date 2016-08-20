@@ -5,7 +5,7 @@
         "adminUsername": {
             "defaultValue": "admin-user",
             "type": "string",
-            "minLength": 5
+             "minLength": 5
         },		
         "virtualMachines_adminPassword": {
             "type": "securestring"
@@ -20,7 +20,7 @@
         },
         "OSImage": {
 			"defaultValue": "2012-R2-Datacenter",
-            "allowedValues": ["2012-R2-Datacenter","2008-R2-SP1"],
+            "allowedValues": ["2012-R2-Datacenter","2008-R2-SP1"], 
             "type": "string",
             "minLength": 1
         },			
@@ -53,6 +53,7 @@
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
         "storageAccountsOS_name": "[concat(uniqueString(resourceGroup().id),'storage')]",
         "storageAccountsData_name": "[variables('storageAccountsOS_name')]",
+        "vmExtensionName": "dscExtension",
         "vmCount": 1
     },
     "resources": [
@@ -141,8 +142,8 @@
                 "[resourceId('Microsoft.Compute/availabilitySets', parameters('AvailabilitySet'))]",			
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountsOS_name'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountsData_name'))]",
-                "niccopy",
-                "pipcopy"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachines_name'),'-',copyIndex(),'-nic1'))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachines_name'),'-',copyIndex(),'-nic1-pip'))]"
             ]
         },
         {
@@ -175,7 +176,6 @@
                 "enableIPForwarding": false
             },
             "dependsOn": [
-                "pipcopy"
 			]
         },
         {
@@ -196,6 +196,31 @@
             },
             "resources": [],
             "dependsOn": []
-        }      
+        },        
+        {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "copy": { 
+            "name": "extcopy", 
+            "count": "[variables('vmCount')]"
+            },
+        "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex(),'/', variables('vmExtensionName'))]",
+        "apiVersion": "2015-05-01-preview",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/',parameters('virtualMachines_name'),'-',copyIndex())]"
+            ],
+        "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.19",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+                "Properties": {
+                    "MachineName": "[concat(parameters('virtualMachines_name'),'-',copyIndex())]"
+                }
+            },
+            "protectedSettings": null
+        }
+        }        
     ]
 }
