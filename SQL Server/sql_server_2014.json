@@ -67,7 +67,7 @@
         },
         "sqlAuthenticationLogin": {
             "type": "string",
-            "defaultValue": "sql-admin"
+            "defaultValue": "admin-sql"
         },
         "sqlAuthenticationPassword": {
             "type": "securestring"
