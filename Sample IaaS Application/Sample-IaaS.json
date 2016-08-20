@@ -162,7 +162,7 @@
             "properties": {
                 "type": "DSC",
                 "publisher": "Microsoft.Powershell",
-                "typeHandlerVersion": "2.19 ",
+                "typeHandlerVersion": "2.19",
                 "autoUpgradeMinorVersion": "true",
                 "settings": {
                     "modulesUrl": "[parameters('DscModuleUrl')]",
