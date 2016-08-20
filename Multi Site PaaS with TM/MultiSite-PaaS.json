@@ -76,6 +76,62 @@
             "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
             "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', concat(parameters('webAppNamePrefix'),'-farm-',copyIndex()))]"
         }
+    },
+    {
+        "name": "[concat(parameters('webAppNamePrefix'),'-tm')]",
+        "type": "Microsoft.Network/trafficManagerProfiles",
+        "apiVersion": "2015-11-01",
+        "location": "global",
+        "dependsOn": [
+            "siteCopy"
+        ],
+        "properties": {
+            "profileStatus": "Enabled",
+            "trafficRoutingMethod": "Performance",
+            "dnsConfig": {
+                "relativeName": "[concat(parameters('webAppNamePrefix'),'-tm')]",
+                "ttl": 30
+            },
+            "monitorConfig": {
+                "protocol": "HTTP",
+                "port": 80,
+                "path": "/"
+            },
+            "endpoints": [
+                {
+                    "name": "[concat(parameters('webAppNamePrefix'),'-endpoint-','0')]",
+                    "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                    "properties": {
+                        "targetResourceId": "[resourceID('Microsoft.Web/sites/',concat(parameters('webAppNamePrefix'),'-site-','0'))]",
+                        "endpointStatus": "Enabled"
+                    }
+                },
+                {
+                    "name": "[concat(parameters('webAppNamePrefix'),'-endpoint-','1')]",
+                    "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                    "properties": {
+                        "targetResourceId": "[resourceID('Microsoft.Web/sites/',concat(parameters('webAppNamePrefix'),'-site-','1'))]",
+                        "endpointStatus": "Enabled"
+                    }
+                },
+                {
+                    "name": "[concat(parameters('webAppNamePrefix'),'-endpoint-','2')]",
+                    "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                    "properties": {
+                        "targetResourceId": "[resourceID('Microsoft.Web/sites/',concat(parameters('webAppNamePrefix'),'-site-','2'))]",
+                        "endpointStatus": "Enabled"
+                    }
+                },
+                {
+                    "name": "[concat(parameters('webAppNamePrefix'),'-endpoint-','3')]",
+                    "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                    "properties": {
+                        "targetResourceId": "[resourceID('Microsoft.Web/sites/',concat(parameters('webAppNamePrefix'),'-site-','3'))]",
+                        "endpointStatus": "Enabled"
+                    }
+                }                                
+            ]
+        }
     }
   ],
   "outputs": {
