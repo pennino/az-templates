@@ -21,7 +21,7 @@
         },
         "adminUsername": {
             "type": "string",
-            "defaultValue": "admin-user"
+            "defaultValue": "user-admin"
         },
         "adminPassword": {
             "type": "securestring"
@@ -49,7 +49,11 @@
         "subnetName": {
             "type": "string",
             "defaultValue": "application-it"
-        },	        
+        },
+        "vmWebLoadBalancerName": {
+            "type": "string",
+            "defaultValue": "iaas-vm-lb"
+        },
         "storageAccountType": {
             "defaultValue": "Standard_LRS",
 			"allowedValues": [ "Standard_LRS","Standard_GRS","Premium_LRS" ],			
@@ -163,7 +167,7 @@
                 "type": "DSC",
                 "publisher": "Microsoft.Powershell",
                 "typeHandlerVersion": "2.19",
-                "autoUpgradeMinorVersion": "true",
+                "autoUpgradeMinorVersion": false,
                 "settings": {
                     "modulesUrl": "[parameters('DscModuleUrl')]",
                     "configurationFunction": "[parameters('DscModuleFunction')]",
@@ -209,13 +213,19 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip'))]"  
-                            }
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmWebLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+                                }
+                            ]
                         }
                     }
                 ]
             },
             "dependsOn": [
-                "pipCopy"
+                "pipCopy",
+                "[concat('Microsoft.Network/loadBalancers/',parameters('vmWebLoadBalancerName'))]"
             ]
         },
         {
@@ -233,6 +243,62 @@
                 "dnsSettings": {
                     "domainNameLabel": "[concat(parameters('vmPrefix'),'-',copyIndex())]"
                 }
+            }
+        },
+        {
+            "name": "[parameters('vmWebLoadBalancerName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "type": "Microsoft.Network/loadBalancers",
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                                },
+                            "privateIPAddress": "10.28.2.100",
+                            "privateIPAllocationMethod": "Static"
+                            },
+                    "name": "LoadBalancerFrontend"    
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "BackendPool1"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmWebLoadBalancerName')),'/frontendIPConfigurations/LoadBalancerFrontend')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmWebLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmWebLoadBalancerName')),'/probes/LBProbe')]"
+                            },
+                            "protocol": "Tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "idleTimeoutInMinutes": 15
+                        },
+                        "name": "LBRule"
+                    }
+                ],
+                "probes": [
+                    {
+                       "properties": {
+                           "protocol": "Tcp",
+                           "port": 80,
+                           "intervalInSeconds": 15,
+                           "numberOfProbes": 2
+                       },
+                       "name": "LBProbe"
+                    }
+                ]
             }
         }
     ],
