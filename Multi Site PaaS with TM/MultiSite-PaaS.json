@@ -56,6 +56,26 @@
           "workerSize": "[parameters('farmWorkerSize')]",
           "numberOfWorkers": 1
       }
+    },
+    {
+        "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
+        "type": "Microsoft.Web/sites",
+        "location": "[parameters('webAppLocations')[copyIndex()]]",
+        "apiVersion": "2015-08-01",
+        "copy": {
+            "name": "siteCopy",
+            "count": "[length(parameters('webAppLocations'))]"
+            },
+        "dependsOn": [
+            "farmCopy"
+        ],
+        "tags": {
+            "displayName": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]"
+        },
+        "properties": {
+            "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
+            "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', concat(parameters('webAppNamePrefix'),'-farm-',copyIndex()))]"
+        }
     }
   ],
   "outputs": {
