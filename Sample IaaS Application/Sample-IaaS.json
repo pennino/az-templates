@@ -1,0 +1,245 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmPrefix": {
+            "type": "string",
+            "defaultValue": "iaas-vm"
+        },
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 2
+        },
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_A0"
+        },
+        "OSImage": {
+            "type": "string",
+            "allowedValues": ["2012-R2-Datacenter","2008-R2-SP1"],
+            "defaultValue": "2012-R2-Datacenter"   
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "admin-user"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "availabilitySetName": {
+            "type": "string",
+            "defaultValue": "iaas-vm-as"
+        },
+        "availabilitySetPlatformFaultDomainCount": {
+            "type": "int",
+            "defaultValue": 3
+        },
+        "availabilitySetPlatformUpdateDomainCount": {
+            "type": "int",
+            "defaultValue": 3
+        },
+        "virtualNetworkRG": {
+            "type": "string",
+            "defaultValue": "network-rg"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "defaultValue": "vnet-1"
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "application-it"
+        },	        
+        "storageAccountType": {
+            "defaultValue": "Standard_LRS",
+			"allowedValues": [ "Standard_LRS","Standard_GRS","Premium_LRS" ],			
+            "type": "string",
+            "minLength": 1
+        },
+        "DscModuleUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/dsc-extension-iis-server-windows-vm/ContosoWebsite.ps1.zip"
+        },
+        "DscModuleFunction": {
+            "type": "string",
+            "defaultValue": "ContosoWebSite.ps1\\ContosoWebSite"
+        }
+    },
+    "variables": {
+        "storageAccount": "[concat(uniquestring(resourceGroup().id),'storage')]",
+        "vnetId": "[resourceId('network-rg','Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+		  "type": "Microsoft.Storage/storageAccounts",
+		  "name": "[variables('storageAccount')]",
+		  "apiVersion": "2015-06-15",
+		  "location": "[resourceGroup().location]",
+		  "properties": {
+			"accountType": "[parameters('storageAccountType')]"
+			}
+		},
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "copy": {
+                "count": "[parameters('vmCount')]",
+                "name": "vmCopy"
+            },
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmPrefix'),'-',copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": true,
+                        "enableAutomaticUpdates": false
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('OSImage')]",
+                        "version": "latest"
+                    },
+                    "osDisk": { 
+                        "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-osdisk')]",
+                        "vhd": {
+                            "uri": "[concat('https', '://', variables('storageAccount'), '.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),copyIndex(),'-osdisk.vhd'))]"
+                        },
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-data')]",
+                            "vhd": {
+                                "uri": "[concat('https', '://', variables('storageAccount'), '.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),copyIndex(),'-data.vhd'))]"
+                            },
+                            "createOption": "Empty",
+                            "lun": 0,
+                            "diskSizeGB": "1023",
+                            "caching": "ReadOnly"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1'))]"
+                        }
+                    ]
+                },
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccount'))]",
+                "niccopy",
+                "pipcopy"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "copy": { 
+                "name": "extcopy", 
+                "count": "[parameters('vmCount')]"
+                },
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'/','IIS')]",
+            "tags": {
+                "displayName": "IIS"
+            },
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "type": "DSC",
+                "publisher": "Microsoft.Powershell",
+                "typeHandlerVersion": "2.19",
+                "autoUpgradeMinorVersion": "true",
+                "settings": {
+                    "modulesUrl": "[parameters('DscModuleUrl')]",
+                    "configurationFunction": "[parameters('DscModuleFunction')]",
+                    "properties": {
+                        "MachineName": "[concat(parameters('vmPrefix'),'-',copyIndex())]"
+                    }
+                },
+                "protectedSettings": {
+                }
+            },
+            "dependsOn": [ 
+                "vmCopy"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[parameters('availabilitySetName')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformFaultDomainCount": "[parameters('availabilitySetPlatformFaultDomainCount')]",
+                "platformUpdateDomainCount": "[parameters('availabilitySetPlatformUpdateDomainCount')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "copy": { 
+                "name": "niccopy", 
+                "count": "[parameters('vmCount')]"
+            }, 
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip'))]"  
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "pipCopy"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "copy": { 
+                "name": "pipcopy", 
+                "count": "[parameters('vmCount')]"
+            }, 
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('vmPrefix'),'-',copyIndex())]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}
