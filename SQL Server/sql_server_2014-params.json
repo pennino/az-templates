@@ -10,6 +10,6 @@
         },
         "sqlAuthenticationLogin": {
             "value": "sql-admin"
-        }
+        }   
     }
 }

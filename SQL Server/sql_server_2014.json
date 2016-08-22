@@ -44,7 +44,15 @@
         "subnetName": {
             "type": "string",
             "defaultValue": "backend-it"
-        },	        
+        },
+        "vmLoadBalancerName": {
+            "type": "string",
+            "defaultValue": "sql-vm-lb"
+        },
+        "vmLoadBalancerIP": {
+            "type": "string",
+            "defaultValue": "10.28.1.100"
+        },   	        
         "sqlConnectivityType": {
             "type": "string",
             "defaultValue": "Public"
@@ -294,13 +302,19 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip'))]"  
-                            }
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+                                }
+                            ]
                         }
                     }
                 ]
             },
             "dependsOn": [
-                "pipCopy"
+                "pipCopy",
+                "[concat('Microsoft.Network/loadBalancers/',parameters('vmLoadBalancerName'))]"
             ]
         },
         {
@@ -318,6 +332,64 @@
                 "dnsSettings": {
                     "domainNameLabel": "[concat(parameters('vmPrefix'),'-',copyIndex())]"
                 }
+            }
+        },
+        {
+            "name": "[parameters('vmLoadBalancerName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "type": "Microsoft.Network/loadBalancers",
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                                },
+                            "privateIPAddress": "[parameters('vmLoadBalancerIP')]",
+                            "privateIPAllocationMethod": "Static"
+                            },
+                    "name": "LoadBalancerFrontend"    
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "BackendPool1"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmLoadBalancerName')),'/frontendIPConfigurations/LoadBalancerFrontend')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmLoadBalancerName')),'/backendAddressPools/BackendPool1')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('vmLoadBalancerName')),'/probes/LBProbe')]"
+                            },
+                            "protocol": "Tcp",
+                            "frontendPort": 1433,
+                            "backendPort": 1433,
+                            "idleTimeoutInMinutes": 15,
+                            "loadDistribution": "Default",
+                            "enableFloatingIP": true
+                        },
+                        "name": "LBRule"
+                    }
+                ],
+                "probes": [
+                    {
+                       "properties": {
+                           "protocol": "Tcp",
+                           "port": 59999,
+                           "intervalInSeconds": 15,
+                           "numberOfProbes": 2
+                       },
+                       "name": "LBProbe"
+                    }
+                ]
             }
         }
     ],
