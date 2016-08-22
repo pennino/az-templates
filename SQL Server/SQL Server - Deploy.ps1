@@ -8,7 +8,7 @@ $rg = "lab-sql-rg"
 $location = "westeurope"
 
 try {
-    Get-AzureRmResourceGroup -name $rg -Location $location -ea stop
+    $rg = Get-AzureRmResourceGroup -name $rg -Location $location -ea stop
 }
 catch {
     write-host -ForegroundColor Yellow ("Creating Resource Group '{0}'" -f $rg)
