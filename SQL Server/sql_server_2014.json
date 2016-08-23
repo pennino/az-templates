@@ -14,6 +14,10 @@
             "type": "string",
             "defaultValue": "Standard_DS1"
         },
+        "virtualMachineQrSize": {
+            "type": "string",
+            "defaultValue": "Basic_A0"
+        },        
         "adminUsername": {
             "type": "string",
             "defaultValue": "admin-user"
@@ -85,6 +89,10 @@
 			"allowedValues": [ "Standard_LRS","Standard_GRS","Premium_LRS" ],			
             "type": "string",
             "minLength": 1
+        },
+        "OSImage": {
+            "type": "string",
+            "defaultValue": "2012-R2-Datacenter"
         }
     },
     "variables": {
@@ -168,6 +176,63 @@
                 "pipcopy"
             ]
         },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(parameters('vmPrefix'),'-','qr')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmPrefix'),'-','qr')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": "true"
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineQrSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('OSImage')]",
+                        "version": "latest"
+                    },
+                    "osDisk": { 
+                        "name": "[concat(parameters('vmPrefix'),'-','qr','-osdisk')]",
+                        "vhd": {
+                            "uri": "[concat('https', '://', variables('storageAccount'), '.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),'-qr','-osdisk.vhd'))]"
+                        },
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('vmPrefix'),'-','-qr','-data')]",
+                            "vhd": {
+                                "uri": "[concat('https', '://', variables('storageAccount'), '.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),'-qr','-data.vhd'))]"
+                            },
+                            "createOption": "Empty",
+                            "lun": 0,
+                            "diskSizeGB": "1023",
+                            "caching": "ReadOnly"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmPrefix'),'-','qr','-nic1'))]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccount'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmPrefix'),'-','qr','-nic1'))]"
+            ]
+        },        
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'/SqlIaasExtension')]",
@@ -334,6 +399,45 @@
                 }
             }
         },
+      {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('vmPrefix'),'-','qr','-nic1')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-','qr','-nic1-pip'))]"  
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+               "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-','qr','-nic1-pip'))]",
+            ]
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('vmPrefix'),'-','qr','-nic1-pip')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('vmPrefix'),'-','qr')]"
+                }
+            }
+        },        
         {
             "name": "[parameters('vmLoadBalancerName')]",
             "apiVersion": "2015-06-15",

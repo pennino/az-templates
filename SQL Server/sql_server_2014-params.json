@@ -10,6 +10,12 @@
         },
         "sqlAuthenticationLogin": {
             "value": "sql-admin"
-        }   
+        },
+        "vmPrefix": {
+            "value": "vmsql"
+         },
+        "availabilitySetName": {
+            "value": "sqlvm-av"
+        }
     }
 }
