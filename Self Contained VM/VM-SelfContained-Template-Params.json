@@ -4,30 +4,30 @@
     "parameters": {
         "adminUsername": {
             "value": "azmin"
-        },		
+        },
+        "vmCount": {
+            "value": 2
+        },        
         "virtualMachines_name": {
-            "value": "poc-dsc"
+            "value": "test-vm"
         },
-        "virtualNetworkRG": {
-            "value": "poc-ag-network"
-        },		
-        "virtualNetworkName": {
-            "value": "vnet-1"
-        },
-        "subnetName": {
-            "value": "application-it"
-        },		
-        "DataDisk1_Size": {
-            "value": 512      
-        },		
         "virtualMachineSize": {
-            "value": "Standard_A0"
+            "value": "Basic_A0"
         },
         "OSImage": {
             "value": "2012-R2-Datacenter"
+        },
+        "DataDisk1_Size": {
+            "value": 512      
+        },		        
+        "virtualNetworkRG": {
+            "value": "network-rg"
         },		
-        "AvailabilitySet": {
-            "value": "poc-dsc-as"
+        "virtualNetworkName": {
+            "value": "vnet-01"
+        },
+        "subnetName": {
+            "value": "dmz-it"
         }
     }
 }

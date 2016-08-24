@@ -4,7 +4,7 @@ Login-AzureRmAccount -Credential $cred
 #endregion
 
 #region Create Resource Group
-$rg = "poc-ag-dsc"
+$rg = "test-q-rg"
 $location = "westeurope"
 
 try {
@@ -24,7 +24,7 @@ If ($psISE){
 }
 
 $templateFilePath = join-path $root "VM-SelfContained-Template.json"
-$templateFilePath = join-path $root "VM-SelfContained-DSC.json"
+# $templateFilePath = join-path $root "VM-SelfContained-DSC.json"
 $parametersFilePath = join-path $root "VM-SelfContained-Template-Params.json"
 
 try {

@@ -43,9 +43,9 @@
         "subnetName": {
             "type": "string"
         },		
-        "AvailabilitySet": {
-            "defaultValue": "",
-            "type": "string"
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 1
         }       
     },
     "variables": {
@@ -53,7 +53,7 @@
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
         "storageAccountsOS_name": "[concat(uniqueString(resourceGroup().id),'storage')]",
         "storageAccountsData_name": "[variables('storageAccountsOS_name')]",
-        "vmCount": 1
+        "AvailabilitySet": "[concat(parameters('virtualMachines_name'),'-','as')]"
     },
     "resources": [
 		{
@@ -67,19 +67,19 @@
 		},
         {
           "type": "Microsoft.Compute/availabilitySets",
-          "name": "[parameters('AvailabilitySet')]",
+          "name": "[variables('AvailabilitySet')]",
           "apiVersion": "2015-06-15",
           "location": "[resourceGroup().location]",
           "properties": {
             "platformFaultDomainCount": 1,
             "platformUpdateDomainCount": 3
           }
-        },  
+        },
         {
             "type": "Microsoft.Compute/virtualMachines",
             "copy": { 
                     "name": "vmcopy", 
-                    "count": "[variables('vmCount')]"
+                    "count": "[parameters('vmCount')]"
                 }, 
             "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex())]",
             "apiVersion": "2015-06-15",
@@ -134,11 +134,11 @@
                     ]
                 },
 				"availabilitySet": {
-					"id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('AvailabilitySet'))]"
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]"
 				}    
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Compute/availabilitySets', parameters('AvailabilitySet'))]",			
+                "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]",			
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountsOS_name'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountsData_name'))]",
                 "niccopy",
@@ -149,7 +149,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "copy": { 
                 "name": "niccopy", 
-                "count": "[variables('vmCount')]"
+                "count": "[parameters('vmCount')]"
             }, 
             "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex(),'-nic1')]",
             "apiVersion": "2016-03-30",
@@ -182,7 +182,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "copy": { 
                 "name": "pipcopy", 
-                "count": "[variables('vmCount')]"
+                "count": "[parameters('vmCount')]"
             }, 
             "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex(),'-nic1-pip')]",
             "apiVersion": "2016-03-30",
