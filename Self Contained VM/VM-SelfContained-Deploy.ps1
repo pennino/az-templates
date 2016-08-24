@@ -4,7 +4,7 @@ Login-AzureRmAccount -Credential $cred
 #endregion
 
 #region Create Resource Group
-$rg = "test-q-rg"
+$rg = "lab-selfvm-rg"
 $location = "westeurope"
 
 try {
