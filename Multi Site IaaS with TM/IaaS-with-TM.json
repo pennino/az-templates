@@ -4,7 +4,7 @@
     "parameters": {
         "vmPrefix": {
             "type": "string",
-            "defaultValue": "iaastrm"
+            "defaultValue": "iaasvm"
         },
         "vmCount": {
             "type": "int",
@@ -18,10 +18,18 @@
             "type": "array",
             "defaultValue": ["vnet-2", "vnet-3"]
         },
+        "NetPrefix": {
+            "type": "array",
+            "defaultValue": ["10.29.0.0/16", "10.30.0.0/16"]
+        },        
         "Subnet": {
             "type": "array",
             "defaultValue": ["dmz-2", "dmz-3"]
-        },               
+        },
+        "SubPrefix": {
+            "type": "array",
+            "defaultValue": ["10.29.1.0/24", "10.30.1.0/24"]
+        },                           
         "virtualMachineSize": {
             "type": "string",
             "defaultValue": "Standard_A0"
@@ -63,6 +71,33 @@
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
     },
     "resources": [
+        {
+			"type": "Microsoft.Network/virtualNetworks",
+            "copy": {
+                "count": "[length(parameters('vmLocations'))]",
+                "name": "vnicCopy"
+            },  			
+            "name": "[parameters('vNet')[copyIndex()]]",
+            "apiVersion": "2016-03-30",
+            "location": "[parameters('vmLocations')[copyIndex()]]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('NetPrefix')[copyIndex()]]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('Subnet')[copyIndex()]]",
+                        "properties": {
+                            "addressPrefix": "[parameters('SubPrefix')[copyIndex()]]"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": []
+        },        
         {
 		  "type": "Microsoft.Storage/storageAccounts",
             "copy": {
@@ -195,7 +230,7 @@
                         "name": "ipconfig1",
                         "properties": {
                             "subnet": {
-                                "id": "[concat(resourceId('network-rg','Microsoft.Network/virtualNetworks', parameters('vNet')[copyIndex()]),'/subnets/',parameters('Subnet')[copyIndex()])]"
+                                "id": "[concat(resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('vNet')[copyIndex()]),'/subnets/',parameters('Subnet')[copyIndex()])]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
