@@ -1,0 +1,236 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmPrefix": {
+            "type": "string",
+            "defaultValue": "iaastrm"
+        },
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 2
+        },
+        "vmLocations": {
+            "type": "array",
+            "defaultValue": ["northeurope", "westus"]
+        },
+        "vNet": {
+            "type": "array",
+            "defaultValue": ["vnet-2", "vnet-3"]
+        },
+        "Subnet": {
+            "type": "array",
+            "defaultValue": ["dmz-2", "dmz-3"]
+        },               
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_A0"
+        },
+        "OSImage": {
+            "type": "string",
+            "allowedValues": ["2012-R2-Datacenter","2008-R2-SP1"],
+            "defaultValue": "2012-R2-Datacenter"   
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "user-admin"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "virtualNetworkRG": {
+            "type": "string",
+            "defaultValue": "network-rg"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "defaultValue": "vnet-1"
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "dmz-it"
+        },
+        "storageAccountType": {
+            "defaultValue": "Standard_LRS",
+			"allowedValues": [ "Standard_LRS","Standard_GRS","Premium_LRS" ],			
+            "type": "string",
+            "minLength": 1
+        }
+    },
+    "variables": {
+        "storageAccount": "[concat(uniquestring(resourceGroup().id),'sa')]",
+        "vnetId": "[resourceId('network-rg','Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+		  "type": "Microsoft.Storage/storageAccounts",
+            "copy": {
+                "count": "[length(parameters('vmLocations'))]",
+                "name": "saCopy"
+            },          
+		  "name": "[concat(variables('storageAccount'),copyIndex())]",
+		  "apiVersion": "2015-06-15",
+		  "location": "[parameters('vmLocations')[copyIndex()]]",
+		  "properties": {
+			"accountType": "[parameters('storageAccountType')]"
+			}
+		},
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "copy": {
+                "count": "[length(parameters('vmLocations'))]",
+                "name": "vmCopy"
+            },
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "[parameters('vmLocations')[copyIndex()]]",
+            "properties": {
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmPrefix'),'-',copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": true,
+                        "enableAutomaticUpdates": false
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('OSImage')]",
+                        "version": "latest"
+                    },
+                    "osDisk": { 
+                        "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-osdisk')]",
+                        "vhd": {
+                            "uri": "[concat('https', '://', variables('storageAccount'),copyIndex(),'.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),copyIndex(),'-osdisk.vhd'))]"
+                        },
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-data')]",
+                            "vhd": {
+                                "uri": "[concat('https', '://', variables('storageAccount'),copyIndex(),'.blob.core.windows.net', concat('/vhds/', parameters('vmPrefix'),copyIndex(),'-data.vhd'))]"
+                            },
+                            "createOption": "Empty",
+                            "lun": 0,
+                            "diskSizeGB": "1023",
+                            "caching": "ReadOnly"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1'))]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/', concat(variables('storageAccount'),copyIndex()))]",
+                "niccopy",
+                "pipcopy"
+            ]
+        },
+        {
+            "name": "[concat(parameters('vmPrefix'),'-tm')]",
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "dependsOn": [
+                "pipcopy"
+            ],
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Performance",
+                "dnsConfig": {
+                    "relativeName": "[concat(parameters('vmPrefix'),'-tm')]",
+                    "ttl": 30
+                },
+                "monitorConfig": {
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/"
+                },
+                "endpoints": [
+                    {
+                        "name": "[concat(parameters('vmPrefix'),'-endpoint-','0')]",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "targetResourceId": "[resourceID('Microsoft.Network/publicIPAddresses/',concat(parameters('vmPrefix'),'-0-','nic1-pip'))]",
+                            "endpointStatus": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "[concat(parameters('vmPrefix'),'-endpoint-','1')]",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "targetResourceId": "[resourceID('Microsoft.Network/publicIPAddresses/',concat(parameters('vmPrefix'),'-1-','nic1-pip'))]",
+                            "endpointStatus": "Enabled"
+                        }
+                    }                           
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "copy": { 
+                "name": "niccopy", 
+                "count": "[length(parameters('vmLocations'))]"
+            }, 
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[parameters('vmLocations')[copyIndex()]]",
+            "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('network-rg','Microsoft.Network/virtualNetworks', parameters('vNet')[copyIndex()]),'/subnets/',parameters('Subnet')[copyIndex()])]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip'))]"  
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "pipCopy"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "copy": { 
+                "name": "pipcopy", 
+                "count": "[length(parameters('vmLocations'))]"
+            }, 
+            "name": "[concat(parameters('vmPrefix'),'-',copyIndex(),'-nic1-pip')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[parameters('vmLocations')[copyIndex()]]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('vmPrefix'),'-',copyIndex())]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}
