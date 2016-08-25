@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmAdminUser": {
+            "value": "azmin"
+        },		
+        "vmAdminPassword": {
+            "reference": { 
+              "keyVault": { 
+                "id": "/subscriptions/55775091-5683-46a1-9d42-5bd515a570e1/resourceGroups/storage-rg/providers/Microsoft.KeyVault/vaults/atgvault1pva" 
+              },  
+              "secretName": "admin-password"  
+            }              
+        },
+        "vmCount": {
+            "value": 1
+        },        
+        "virtualMachines_name": {
+            "value": "vault-vm"
+        },
+        "virtualMachineSize": {
+            "value": "Basic_A0"
+        },
+        "OSImage": {
+            "value": "2012-R2-Datacenter"
+        },
+        "DataDisk1_Size": {
+            "value": 512      
+        },		        
+        "virtualNetworkRG": {
+            "value": "network-rg"
+        },		
+        "virtualNetworkName": {
+            "value": "vnet-01"
+        },
+        "subnetName": {
+            "value": "dmz-it"
+        }
+    }
+}
