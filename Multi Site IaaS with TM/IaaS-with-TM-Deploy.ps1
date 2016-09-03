@@ -4,7 +4,7 @@ Login-AzureRmAccount -Credential $cred
 #endregion
 
 #region Create Resource Group
-$rg = "test-iaastm-rg"
+$rg = "test-trafficmg-rg"
 $location = "westeurope"
 
 try {
