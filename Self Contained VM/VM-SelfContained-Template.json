@@ -196,6 +196,27 @@
             },
             "resources": [],
             "dependsOn": []
-        }      
+        },
+        {
+        "apiVersion": "2015-06-15",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "copy": { 
+                "name": "extcopy", 
+                "count": "[parameters('vmCount')]"
+            }, 
+        "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex(),'/bg')]",        
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+            "vmcopy"
+            ],
+        "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "BGInfo",
+            "typeHandlerVersion": "2.1",
+            "settings": { },
+            "protectedSettings": null,
+            "autoUpgradeMinorVersion": false
+            }
+        }          
     ]
 }
