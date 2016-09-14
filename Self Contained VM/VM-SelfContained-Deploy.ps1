@@ -4,11 +4,11 @@ Login-AzureRmAccount -Credential $cred
 #endregion
 
 #region Create Resource Group
-$rg = "lab-selfvm-rg"
+$rg = "temp-rg"
 $location = "westeurope"
 
 try {
-    Get-AzureRmResourceGroup -name $rg -Location $location -ea stop
+    $rg = Get-AzureRmResourceGroup -name $rg -Location $location -ea stop
 }
 catch {
     write-host -ForegroundColor Yellow ("Creating Resource Group '{0}'" -f $rg)
@@ -29,7 +29,7 @@ $parametersFilePath = join-path $root "VM-SelfContained-Template-Params.json"
 
 try {
     Test-AzureRmResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName `
-    -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -verbose -ea Stop
+    -TemplateFile "$templateFilePath" -TemplateParameterFile "$parametersFilePath" -verbose -ea Stop
 
     New-AzureRmResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName  -TemplateFile $templateFilePath `
     -TemplateParameterFile $parametersFilePath -verbose   
