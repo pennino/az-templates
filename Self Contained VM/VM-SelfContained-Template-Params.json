@@ -3,16 +3,24 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "adminUsername": {
-            "value": "azmin"
+            "value": "admin-user"
+        },
+        "virtualMachines_adminPassword": {
+            "reference": { 
+              "keyVault": { 
+                "id": "/subscriptions/41b66131-16dc-4a09-a34a-05a2e10ba846/resourceGroups/storage-rg/providers/Microsoft.KeyVault/vaults/keyvault184" 
+              },  
+              "secretName": "admin-password"  
+            }
         },
         "vmCount": {
-            "value": 2
+            "value": 1
         },        
         "virtualMachines_name": {
             "value": "test-vm"
         },
         "virtualMachineSize": {
-            "value": "Basic_A0"
+            "value": "Standard_A0"
         },
         "OSImage": {
             "value": "2012-R2-Datacenter"
@@ -24,7 +32,7 @@
             "value": "network-rg"
         },		
         "virtualNetworkName": {
-            "value": "vnet-01"
+            "value": "vnet-1"
         },
         "subnetName": {
             "value": "dmz-it"
