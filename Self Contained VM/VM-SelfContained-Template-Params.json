@@ -29,7 +29,7 @@
             "value": 512      
         },		        
         "virtualNetworkRG": {
-            "value": "network-rg"
+            "value": "poc-ag-network"
         },		
         "virtualNetworkName": {
             "value": "vnet-1"
