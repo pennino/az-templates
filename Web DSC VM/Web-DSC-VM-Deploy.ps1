@@ -4,7 +4,7 @@ Login-AzureRmAccount -Credential $cred
 #endregion
 
 #region Create Resource Group
-$rg = "lab-adds-rg"
+$rg = "lab-web-rg"
 $location = "westeurope"
 
 try {
@@ -23,8 +23,8 @@ If ($psISE){
     $root = split-path $psISE.CurrentFile.FullPath
 }
 
-$templateFilePath = join-path $root "ADDS-DSC-VM.json"
-$parametersFilePath = join-path $root "ADDS-DSC-VM-Params.json"
+$templateFilePath = join-path $root "Web-DSC-VM.json"
+$parametersFilePath = join-path $root "Web-DSC-VM-Params.json"
 
 try {
     Test-AzureRmResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName `

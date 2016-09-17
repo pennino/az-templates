@@ -17,7 +17,7 @@
             "value": 1
         },        
         "virtualMachines_name": {
-            "value": "adds"
+            "value": "web"
         },
         "virtualMachineSize": {
             "value": "Standard_A0"

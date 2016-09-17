@@ -170,9 +170,9 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "configuration": {
-                                "url": "https://github.com/pennino/az-templates/raw/master/ADDS%20DSC%20VM/DSC/ADDSConfig.ps1.zip",
-                                "script": "ADDSConfig.ps1",
-                                "function": "Main"
+                                "url": "https://github.com/pennino/az-templates/blob/master/Web%20DSC%20VM/DSC/DSCConfig-Deploy.ps1",
+                                "script": "DSCConfig.ps1",
+                                "function": "Test"
                             },
                             "configurationArguments": {
                                 "NodeName": "[concat(parameters('virtualMachines_name'),'-',copyIndex())]"
