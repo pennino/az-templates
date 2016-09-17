@@ -137,6 +137,25 @@
 					"id": "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]"
 				}    
             },
+            "resources": [
+                {
+                "apiVersion": "2015-06-15",
+                "type": "extensions",
+                "name": "bginfo",        
+                "location": "[resourceGroup().location]",
+                "dependsOn": [
+                    "[concat(parameters('virtualMachines_name'),'-',copyIndex())]"
+                    ],
+                "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "BGInfo",
+                    "typeHandlerVersion": "2.1",
+                    "settings": { },
+                    "protectedSettings": null,
+                    "autoUpgradeMinorVersion": false
+                    }
+                } 
+            ],            
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]",			
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountsOS_name'))]",
@@ -196,27 +215,6 @@
             },
             "resources": [],
             "dependsOn": []
-        },
-        {
-        "apiVersion": "2015-06-15",
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "copy": { 
-                "name": "extcopy", 
-                "count": "[parameters('vmCount')]"
-            }, 
-        "name": "[concat(parameters('virtualMachines_name'),'-',copyIndex(),'/bg')]",        
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-            "vmcopy"
-            ],
-        "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "BGInfo",
-            "typeHandlerVersion": "2.1",
-            "settings": { },
-            "protectedSettings": null,
-            "autoUpgradeMinorVersion": false
-            }
-        }          
+        }        
     ]
 }
