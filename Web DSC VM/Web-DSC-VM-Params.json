@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "value": "admin-user"
+        },
+        "virtualMachines_adminPassword": {
+            "reference": { 
+              "keyVault": { 
+                "id": "/subscriptions/41b66131-16dc-4a09-a34a-05a2e10ba846/resourceGroups/storage-rg/providers/Microsoft.KeyVault/vaults/keyvault184" 
+              },  
+              "secretName": "admin-password"  
+            }
+        },
+        "vmCount": {
+            "value": 1
+        },        
+        "virtualMachines_name": {
+            "value": "adds"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_A0"
+        },
+        "OSImage": {
+            "value": "2012-R2-Datacenter"
+        },
+        "DataDisk1_Size": {
+            "value": 512      
+        },		        
+        "virtualNetworkRG": {
+            "value": "network-rg"
+        },		
+        "virtualNetworkName": {
+            "value": "vnet-1"
+        },
+        "subnetName": {
+            "value": "backend"
+        }
+    }
+}
