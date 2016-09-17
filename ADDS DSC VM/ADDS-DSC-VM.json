@@ -154,7 +154,40 @@
                     "protectedSettings": null,
                     "autoUpgradeMinorVersion": false
                     }
-                } 
+                },
+                {
+                    "name": "Microsoft.Powershell.DSC",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2015-06-15",
+                    "dependsOn": [
+                        "[concat(parameters('virtualMachines_name'),'-',copyIndex())]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.9",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "configuration": {
+                                "url": "https://github.com/pennino/az-templates/raw/master/ADDS%20DSC%20VM/DSC/ADDSConfig.ps1.zip",
+                                "script": "ADDSConfig.ps1",
+                                "function": "Main"
+                            },
+                            "configurationArguments": {
+                                "NodeName": "[concat(parameters('virtualMachines_name'),'-',copyIndex())]",
+                                "domainName": "elombu.com",
+                                "domainAdminCredentials": {
+                                "UserName": "[parameters('adminUsername')]",
+                                "Password": "[parameters('virtualMachines_adminPassword')]"
+                                    }
+                            }
+                        },
+                        "protectedSettings": {
+                            "DataBlobUri": "https://raw.githubusercontent.com/pennino/az-templates/master/ADDS%20DSC%20VM/DSC/ADDSConfig-Data.psd1"
+                        }                                   
+                    }
+                }                 
             ],
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]",			
