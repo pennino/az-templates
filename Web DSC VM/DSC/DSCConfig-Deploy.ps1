@@ -6,7 +6,7 @@ If ($psISE){
 
 if (Test-Path -Path $DSCSourceFolder)
 {
-	Get-ChildItem -Path $DSCSourceFolder -Filter *.ps1 | ForEach-Object {
+	Get-ChildItem -Path $DSCSourceFolder -Filter *.ps1 | ? { $_.BaseName -notmatch "Deploy"} | ForEach-Object {
 
 		$archiveName = $_.BaseName + '.ps1.zip'
 		$archivePath = Join-Path -Path $DSCSourceFolder -ChildPath $archiveName
@@ -15,6 +15,6 @@ if (Test-Path -Path $DSCSourceFolder)
 		Publish-AzureRmVMDscConfiguration -ConfigurationPath $_.FullName `
 			-OutputArchivePath $archivePath `
 			-Force `
-			-Verbose
+			-verbose
 	}
 }
