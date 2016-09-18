@@ -17,7 +17,7 @@ Node $AllNodes.NodeName
     {
         LocalConfigurationManager
 		{
-			ConfigurationMode = ApplyOnly
+			ConfigurationMode = 'ApplyOnly'
 			RebootNodeIfNeeded = $true
 			ActionAfterReboot = 'ContinueConfiguration'
 			AllowModuleOverwrite = $true
