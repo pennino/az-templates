@@ -11,11 +11,13 @@ Param (
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration, xActiveDirectory
 
-Node $NodeName
+[System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("$DomainName\$($domainAdminCredentials.UserName)", $domainAdminCredentials.Password)
+
+Node $AllNodes.NodeName
     {
         LocalConfigurationManager
 		{
-			ConfigurationMode = 'ApplyAndAutoCorrect'
+			ConfigurationMode = ApplyOnly
 			RebootNodeIfNeeded = $true
 			ActionAfterReboot = 'ContinueConfiguration'
 			AllowModuleOverwrite = $true
@@ -71,8 +73,8 @@ Node $NodeName
 		xADDomain CreateForest 
 		{ 
 			DomainName = $domainName            
-			DomainAdministratorCredential = $domainAdminCredentials
-			SafemodeAdministratorPassword = $domainAdminCredentials
+			DomainAdministratorCredential = $DomainCreds
+			SafemodeAdministratorPassword = $DomainCreds
 			DatabasePath = "C:\Windows\NTDS"
 			LogPath = "C:\Windows\NTDS"
 			SysvolPath = "C:\Windows\Sysvol"
