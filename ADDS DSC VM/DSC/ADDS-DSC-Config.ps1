@@ -11,7 +11,7 @@ Param (
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration, xActiveDirectory
 
-[System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("$DomainName\$($domainAdminCredentials.UserName)", $domainAdminCredentials.Password)
+[System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("$DomainName\$($domainAdminCredentials.UserName)", $domainAdminCredentials.Password)
 
 Node $AllNodes.NodeName
     {
