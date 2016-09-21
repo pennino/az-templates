@@ -6,10 +6,14 @@ Configuration Main
 Param (
 	[string] $NodeName,
 	[string] $domainName,
-	[System.Management.Automation.PSCredential]$domainAdminCredentials
+	[System.Management.Automation.PSCredential]$domainAdminCredentials,
+	[Int]$RetryCount=20,
+	[Int]$RetryIntervalSec=30	
+	
 )
 
-Import-DscResource -ModuleName PSDesiredStateConfiguration, xActiveDirectory
+Import-DscResource -ModuleName PSDesiredStateConfiguration
+Import-DscResource -ModuleName xActiveDirectory, xStorage
 
 [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("$DomainName\$($domainAdminCredentials.UserName)", $domainAdminCredentials.Password)
 
@@ -23,6 +27,21 @@ Node $AllNodes.NodeName
 			AllowModuleOverwrite = $true
 		}
 
+        xWaitforDisk Disk2
+        {
+             DiskNumber = 2
+             RetryIntervalSec =$RetryIntervalSec
+             RetryCount = $RetryCount
+        }
+
+        xDisk ADDataDisk
+        {
+            DiskNumber = 2
+            DriveLetter = 'F'
+			FSLabel = 'DATA'
+			AllocationUnitSize = 64kb
+        }		
+
 		WindowsFeature DNS_RSAT
 		{ 
 			Ensure = "Present" 
@@ -34,12 +53,6 @@ Node $AllNodes.NodeName
 			Ensure = 'Present' 
 			Name = 'AD-Domain-Services' 
 		} 
-
-		WindowsFeature RSAT_AD_AdminCenter 
-		{
-			Ensure = 'Present'
-			Name   = 'RSAT-AD-AdminCenter'
-		}
 
 		WindowsFeature RSAT_ADDS 
 		{
@@ -70,15 +83,18 @@ Node $AllNodes.NodeName
 			Ensure = 'Present'
 			Name   = 'GPMC'
 		} 
-		xADDomain CreateForest 
-		{ 
-			DomainName = $domainName            
-			DomainAdministratorCredential = $DomainCreds
-			SafemodeAdministratorPassword = $DomainCreds
-			DatabasePath = "C:\Windows\NTDS"
-			LogPath = "C:\Windows\NTDS"
-			SysvolPath = "C:\Windows\Sysvol"
-			DependsOn = '[WindowsFeature]ADDS_Install'
-		}
+
+        xADDomain FirstDS 
+        {
+            DomainName = $DomainName
+            DomainAdministratorCredential = $DomainCreds
+            SafemodeAdministratorPassword = $DomainCreds
+            DatabasePath = 'F:\ADDS\NTDS'
+            LogPath = 'F:\ADDS\LOGS'
+            SysvolPath = 'F:\ADDS\SYSVOL'
+            #DependsOn = "[WindowsFeature]ADDSInstall","[xDnsServerAddress]DnsServerAddress","[cDiskNoRestart]ADDataDisk"
+            DependsOn = "[WindowsFeature]ADDSInstall","[xDisk]ADDataDisk"
+        }	
+
     }
 }
