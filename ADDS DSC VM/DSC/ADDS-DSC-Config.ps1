@@ -93,7 +93,7 @@ Node $AllNodes.NodeName
             LogPath = 'F:\ADDS\LOGS'
             SysvolPath = 'F:\ADDS\SYSVOL'
             #DependsOn = "[WindowsFeature]ADDSInstall","[xDnsServerAddress]DnsServerAddress","[cDiskNoRestart]ADDataDisk"
-            DependsOn = "[WindowsFeature]ADDSInstall","[xDisk]ADDataDisk"
+            DependsOn = "[WindowsFeature]ADDS_Install","[xDisk]ADDataDisk"
         }	
 
     }
