@@ -176,7 +176,7 @@
                             },
                             "configurationArguments": {
                                 "NodeName": "[concat(parameters('virtualMachines_name'),'-',copyIndex())]",
-                                "domainName": "root.elombu.com",
+                                "domainName": "corp.elombu.com",
                                 "domainAdminCredentials": {
                                 "UserName": "[parameters('adminUsername')]",
                                 "Password": "PrivateSettingsRef:password"
